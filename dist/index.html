@@ -2,9 +2,30 @@
 <html lang="ru">
 <head>
 	<meta charset="UTF-8">
-	<title>Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>Тестовое задание v1</title>
 </head>
 <body>
-	<h1>Hello, World2!</h1>
+
+	<header>
+		<div class="container">
+			<div class="row">
+				<div class="pull-left">
+					<button type="button" class="header__button" id="add-event-button">Добавить</button>
+					<button type="button" class="header__button" id="reload-button">Обновить</button>
+				</div>
+				<div class="pull-right">
+					<span class="icon icon-magnifier"></span>
+					<span class="header__input-wrapper default-input">
+						<input type="text" id="search-input" class="header__input transparent-input" placeholder="Событие, дата или участник">
+						<span id="clear-header-input" class="header__clear-input icon icon-cross"></span>
+					</span>
+				</div>
+			</div>
+		</div>
+	</header>
+
+
 <script type="text/javascript" src="main.bundle.js"></script></body>
 </html>
