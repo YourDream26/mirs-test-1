@@ -22,7 +22,7 @@ const datetime = {
 		'Ноябрь',
 		'Декабрь'
 	],
-	_obj_selectedDate: new Date( 2018, 2, 1 ),
+	_obj_selectedDate: new Date( ),
 	_obj_prevDate: new Date( ),
 	_obj_nextDate: new Date( ),
 
@@ -54,7 +54,24 @@ const datetime = {
 
 	calendarData: [],
 
-	events: [],
+	events: [
+		{
+			date: 9,
+			month: 4,
+			year: 2018,
+			name: 'День Победы!',
+			description: 'Надо отпраздновать!',
+			customers: 'Александр Петров, Иван Дашкевич'
+		},
+		{
+			date: 22,
+			month: 4,
+			year: 2018,
+			name: 'День Рождения',
+			description: 'ДР у Георгия Константиновича',
+			customers: 'Валерий Марков, Юрий Игнатьев'
+		}
+	],
 
 
 	updateParameters: ( ) => {
@@ -74,6 +91,8 @@ const datetime = {
 		datetime.getCountsOfDays( );
 		datetime.getFirstDayOfMonth( );
 		datetime.generateCalendarData( );
+
+		datetime.setLocalStorage( );
 	},
 
 
@@ -107,39 +126,143 @@ const datetime = {
 
 	generateCalendarData: ( ) => {
 
-		let _week = [];
+		let _week = [],
+				_needToAddBefore = 0,
+				_needToAddAfter = 0,
+				_currentWeek = 0,
+				_currentDate = 1,
+				_dayObject = { },
+				i;
+
+
 		datetime.calendarData = [];
 
 		// If we start not on monday in this month, 
 		// need to take a days from previous month
 		if ( datetime.firstDayOfMonth !== 1 ) {
 			if ( datetime.firstDayOfMonth === 0 )
-				console.log( 'need to add: 6 day(s) in the start of week' );
+				_needToAddBefore = 6;
 			else
-				console.log( 'need to add: ' + ( datetime.firstDayOfMonth - 1 ) + ' day(s) in the start of week' );
+				_needToAddBefore = datetime.firstDayOfMonth - 1;
 		}
-
-		// Adding weeks
-
-
 
 		// If we end not on sunday in this month, 
 		// need to take a days from next month
 		if ( datetime.lastDayOfMonth !== 0 ) {
-			console.log( 'need to add: ' + ( 7 - datetime.lastDayOfMonth ) + ' day(s) in the end of week' );
+			_needToAddAfter = 7 - datetime.lastDayOfMonth;
 		}		
 
 
+		// Adding weeks
+
+		// Days from previous month
+		for ( i = _needToAddBefore; i > 0; --i ) {
+			_dayObject = {
+				year: datetime.prevDate.year, 
+				month: datetime.prevDate.month,
+				date: ( datetime.prevDate.date - i + 1 ),
+				day: ( ( _needToAddBefore - i ) == 0 ) ? 0 : ( _needToAddBefore - i ),
+				dayAlias: '',
+				event: {}
+			}
+			_dayObject.dayAlias = datetime.daysOfWeek[_dayObject.day];
+
+			datetime.events.forEach( event => {
+				if ( event.date == _dayObject.date && event.month == _dayObject.month && event.year == _dayObject.year ) _dayObject.event = event;
+			});
+
+			_week.push( _dayObject );
+		}
+
+
+
+
+		// Days from current month
+		i = 1;
+		while ( i < datetime.countOfDays + 1 ) {
+
+			_dayObject = {
+				year: datetime.selectedDate.year, 
+				month: datetime.selectedDate.month,
+				date: i,
+				day: _week.length,
+				dayAlias: '',
+				event: {}
+			}
+			_dayObject.dayAlias = datetime.daysOfWeek[_dayObject.day];
+
+			datetime.events.forEach( event => {
+				if ( event.date == _dayObject.date && event.month == _dayObject.month && event.year == _dayObject.year ) _dayObject.event = event;
+			});
+
+			_week.push( _dayObject );
+
+			if ( _week.length > 6 ) {
+				datetime.calendarData.push( _week );
+				_week = [];
+			}
+
+			++i;
+		}
+
+
+
+
+		// Days from next month
+		for ( i = 0; i < _needToAddAfter; ++i ) {
+			_dayObject = {
+				year: datetime.nextDate.year, 
+				month: datetime.nextDate.month,
+				date: ( datetime.nextDate.date + i ),
+				day: ( ( 7 - _needToAddAfter + i ) == 0 ) ? 6 : ( 7 - _needToAddAfter + i ),
+				dayAlias: '',
+				event: {}
+			}
+			_dayObject.dayAlias = datetime.daysOfWeek[_dayObject.day];
+
+			datetime.events.forEach( event => {
+				if ( event.date == _dayObject.date && event.month == _dayObject.month && event.year == _dayObject.year ) _dayObject.event = event;
+			});
+
+			_week.push( _dayObject );
+		}
+
+		if ( _week.length > 6 ) {
+			datetime.calendarData.push( _week );
+		}
+
+
+	},
+
+	setLocalStorage: ( ) => {
+
+		let _localStorageObject = {
+			events: datetime.events,
+			selectedDate: datetime.selectedDate
+		};
+
+		window.localStorage.setItem( 'data', JSON.stringify( _localStorageObject ) );
+	},
+
+	getLocalStorage: ( ) => {
+		let _lsData;
+		_lsData = window.localStorage.getItem( 'data' );
+		if ( _lsData ) {
+			_lsData = JSON.parse( _lsData );
+			datetime.events = _lsData.events;
+			datetime._obj_selectedDate = new Date( _lsData.selectedDate.year, _lsData.selectedDate.month, _lsData.selectedDate.date );
+		}
+		
+		datetime.updateParameters( );
 	}
+
 
 };
 
 
 
 
-
-
 // Get default date parameters
-datetime.updateParameters( );
+datetime.getLocalStorage( );
 
 export { datetime };
