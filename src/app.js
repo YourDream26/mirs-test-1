@@ -18,15 +18,22 @@ import { datetime } from './scripts/datetime';
 const app = {
 
 	elements: {
-		calendarContainer: 	document.getElementById( 'calendar-container' ),
-		prevMonthButton: 		document.getElementById( 'prev-month-button' ),
-		nextMonthButton: 		document.getElementById( 'next-month-button' ),
-		todayButton: 				document.getElementById( 'today-button' ),
-		currentDateLabel: 	document.getElementById( 'current-date-label' ),
-		addEventButton: 		document.getElementById( 'add-event-button' ),
-		updateButton: 			document.getElementById( 'update-button' ),
-		searchInput: 				document.getElementById( 'search-input' ),
-		clearSearchInput: 	document.getElementById( 'clear-header-input' )
+		calendarContainer: 			document.getElementById( 'calendar-container' ),
+		prevMonthButton: 				document.getElementById( 'prev-month-button' ),
+		nextMonthButton: 				document.getElementById( 'next-month-button' ),
+		todayButton: 						document.getElementById( 'today-button' ),
+		currentDateLabel: 			document.getElementById( 'current-date-label' ),
+		addEventButton: 				document.getElementById( 'add-event-button' ),
+		updateButton: 					document.getElementById( 'update-button' ),
+		searchInput: 						document.getElementById( 'search-input' ),
+		clearSearchInput: 			document.getElementById( 'clear-header-input' ),
+		addFastEventPopup:			document.getElementById( 'add-fast-popup' ),
+		addEventPopup:					document.getElementById( 'add-event-popup' ),
+		addEventPopupContainer:	document.getElementById( 'event-container' ),
+		searchEventPopup:				document.getElementById( 'search-event-popup' ),
+		addFastForm:			  		document.getElementById( 'add-fast-form' ),
+		addFastInput:			  		document.getElementById( 'add-fast-input' ),
+		searchContainer:				document.getElementById( 'search-container' )
 	},
 	
 	datetime: datetime,
@@ -98,13 +105,239 @@ const app = {
 
 	onClickDayHandler: ( elem ) => {
 
+		let _date;
 
 		elem.addEventListener( 'click', event => {
-			console.log( elem.getAttribute( 'data-date' ) );
+
+			_date = elem.getAttribute( 'data-date' ).split( '-' );
+
+			app.openEventPopup( { date: _date[0], month: _date[1], year: _date[2] }, elem );
+
+
 		});
 
 	},
 
+	openEventPopup: ( date, element ) => {
+
+		let _container;
+
+		_container = app.elements.addEventPopupContainer;
+		_container.innerHTML = '';
+
+		if ( element.classList.contains( 'calendar__day--active' ) ) {
+			app.fillEditPopup( date, _container );
+		} else {
+			app.fillAddPopup( date, _container, {} );
+		}
+
+		app.elements.addEventPopup.style.top  = element.getBoundingClientRect( ).top  + window.scrollY + 'px';
+		app.elements.addEventPopup.style.left = element.getBoundingClientRect( ).left + window.scrollX + element.getBoundingClientRect( ).width + 14 + 'px';
+
+		app.elements.addEventPopup.classList.add( 'visible' );
+
+		element.classList.add( 'calendar__day--selected' );
+
+	},
+
+	fillEditPopup: ( date, container ) => {
+
+		let _event, _block, _divTitle, _divDate, _labelCustomers, _divCustomers, _labelDescription, _divDescription, _buttonEdit;
+
+		app.datetime.events.forEach( evt => {
+			if ( evt.date == date.date && evt.month == date.month && evt.year == date.year ) _event = evt;
+		});
+
+
+		// <---- 		Block 1   	---->
+
+		_block = document.createElement( 'div' );
+		_block.classList.add( 'event__block' );
+
+		_divTitle = document.createElement( 'div' );
+		_divTitle.classList.add( 'event__title' );
+		_divTitle.innerHTML = _event.name;
+
+		_divDate = document.createElement( 'div' );
+		_divDate.classList.add( 'event__date' );
+		_divDate.innerHTML = _event.date + ' ' + _event.monthAlias.toLowerCase( );
+
+		_labelCustomers = document.createElement( 'div' );
+		_labelCustomers.classList.add( 'event__label' );
+		_labelCustomers.innerHTML = 'Участники:';
+
+		_divCustomers = document.createElement( 'div' );
+		_divCustomers.classList.add( 'event__customers' );
+		_divCustomers.innerHTML = _event.customers;
+
+		_block.append( _divTitle );
+		_block.append( _divDate );
+		_block.append( _labelCustomers );
+		_block.append( _divCustomers );
+		container.append( _block );
+
+		// <---- 		Block 2   	---->
+
+		_block = document.createElement( 'div' );
+		_block.classList.add( 'event__block' );
+
+		_labelDescription = document.createElement( 'div' );
+		_labelDescription.classList.add( 'event__label' );
+		_labelDescription.innerHTML = 'Описание:';
+
+		_divDescription = document.createElement( 'div' );
+		_divDescription.classList.add( 'event__description' );
+		_divDescription.innerHTML = _event.description;
+
+		_block.append( _labelDescription );
+		_block.append( _divDescription );
+		container.append( _block );
+
+		// <---- 		Block 3   	---->
+		
+		_block = document.createElement( 'div' );
+		_block.classList.add( 'event__block' );
+
+		_buttonEdit = document.createElement( 'button' );
+		_buttonEdit.classList.add( 'event__edit-button', 'default-button' );
+		_buttonEdit.innerHTML = 'Редактировать';
+
+		_block.append( _buttonEdit );
+		container.append( _block );
+
+
+		_buttonEdit.addEventListener( 'click', evt => {
+			container.innerHTML = '';
+			app.fillAddPopup( date, container, _event );
+		});
+
+	},
+
+	fillAddPopup: ( date, container, event ) => {
+
+
+		let _event, _block, _inputTitle, _inputCustomers, _inputDescription, _buttonAdd, _buttonDelete, form;
+
+		form = document.createElement( 'form' );
+
+		// <---- 		Block 1   	---->
+
+		_block = document.createElement( 'div' );
+		_block.classList.add( 'event__block' );
+
+		_inputTitle = document.createElement( 'input' );
+		_inputTitle.setAttribute( 'name', 'name' );
+		_inputTitle.setAttribute( 'placeholder', 'Событие' );
+		_inputTitle.required = true;
+		_inputTitle.classList.add( 'event__name-input', 'default-input' );
+		if ( event.name ) _inputTitle.value = event.name;
+
+		_inputCustomers = document.createElement( 'input' );
+		_inputCustomers.setAttribute( 'name', 'customers' );
+		_inputCustomers.setAttribute( 'placeholder', 'Имена участников' );
+		_inputCustomers.classList.add( 'event__customers-input', 'default-input' );
+		if ( event.customers ) _inputCustomers.value = event.customers;
+
+		_block.append( _inputTitle );
+		_block.append( _inputCustomers );
+		form.append( _block );
+
+		// <---- 		Block 2   	---->
+
+		_block = document.createElement( 'div' );
+		_block.classList.add( 'event__block' );
+
+		_inputDescription = document.createElement( 'textarea' );
+		_inputDescription.setAttribute( 'name', 'description' );
+		_inputDescription.setAttribute( 'placeholder', 'Описание' );
+		_inputDescription.classList.add( 'event__description-textarea', 'default-input' );
+		if ( event.description ) _inputDescription.innerHTML = event.description;
+
+		_block.append( _inputDescription );
+		form.append( _block );
+
+		// <---- 		Block 3   	---->
+		
+		_block = document.createElement( 'div' );
+		_block.classList.add( 'event__block' );
+
+		_buttonAdd = document.createElement( 'button' );
+		_buttonAdd.setAttribute( 'type', 'submit' );
+		_buttonAdd.classList.add( 'event__add-button', 'default-button' );
+		_buttonAdd.innerHTML = 'Готово';
+
+		_buttonDelete = document.createElement( 'button' );
+		_buttonDelete.setAttribute( 'type', 'button' );
+		_buttonDelete.classList.add( 'event__delete-button', 'default-button' );
+		_buttonDelete.innerHTML = 'Удалить';
+
+		_block.append( _buttonAdd );
+		_block.append( _buttonDelete );
+		form.append( _block );
+
+		container.append( form );
+
+		app.submitAddEventHandler( form, date );
+		app.deleteEventHandler( _buttonDelete, date );
+
+	},
+
+	deleteEventHandler: ( button, date ) => {
+
+		button.addEventListener( 'click', evt => {
+			app.datetime.events.forEach( ( _evt, index ) => {
+				if ( _evt.date == date.date && _evt.month == date.month && _evt.year == date.year ) {
+					app.datetime.events.splice( 1, index );
+				}
+			});
+			app.hideAddEventPopup( );
+			app.datetime.updateParameters( );
+			app.generateInterface( );
+		});
+
+
+	},
+
+	submitAddEventHandler: ( form, date ) => {
+
+		let _fields, _event, i, isEdit = false;
+
+		form.addEventListener( 'submit', evt => {
+			isEdit = false;
+			evt.preventDefault( );
+			
+			_event = {
+				date: date.date,
+				year: date.year,
+				month: date.month,
+				monthAlias: app.datetime.monthsAliases[date.month][1],
+				customers: '',
+				name: '',
+				description: ''
+			};
+
+
+			_fields = form.getElementsByClassName( 'default-input' );
+
+			for ( i = 0; i < _fields.length; ++i ) { _event[_fields[i].getAttribute( 'name' )] = _fields[i].value; }
+
+			app.datetime.events.forEach( ( _evt, index ) => {
+				if ( _evt.date == _event.date && _evt.month == _event.month && _evt.year == _event.year ) {
+					app.datetime.events[index] = _event;
+					isEdit = true;
+				}
+			});
+
+			if ( !isEdit ) app.datetime.events.push( _event );
+
+			app.hideAddEventPopup( );
+			app.datetime.updateParameters( );
+			app.generateInterface( );
+
+			return false;
+		});
+
+	},
 
 	isCurrentDay: ( day ) => {
 		let _currentDay = new Date( );
@@ -118,13 +351,92 @@ const app = {
 
 	},
 
+	generateSearchPopupEventElement: ( searchContainer, event ) => {
+
+		let _aContainer,
+				_spanMainTitle,
+				_spanDate,
+				_hr;
+
+		_aContainer = document.createElement( 'a' );
+		_aContainer.classList.add( 'search__event' );
+		_aContainer.setAttribute( 'data-date', event.date + '-' + event.month + '-' + event.year );
+
+		_spanMainTitle = document.createElement( 'span' );
+		_spanMainTitle.classList.add( 'search__title' );
+		_spanMainTitle.innerHTML = event.name;
+		
+		_spanDate = document.createElement( 'span' );
+		_spanDate.classList.add( 'search__date' );
+		_spanDate.innerHTML = event.date + ' ' + event.monthAlias.toLowerCase( );
+
+		if ( searchContainer.innerHTML != '' ) {
+			_hr = document.createElement( 'div' );
+			_hr.classList.add( 'search__separator' );
+			searchContainer.append( _hr );
+		}
+
+		_aContainer.append( _spanMainTitle );
+		_aContainer.append( _spanDate );
+		searchContainer.append( _aContainer );
+
+		app.searchElementHandler( _aContainer );
+
+	},
+
+	generateSearchPopupNoEvents: ( searchContainer ) => {
+
+		let _noEventDiv;
+
+		_noEventDiv = document.createElement( 'div' );
+		_noEventDiv.classList.add( 'search__empty' );
+		_noEventDiv.innerHTML = "По вашему запросу<br />ничего не найдено";
+
+		searchContainer.append( _noEventDiv );
+	},
+
+	generateSearchPopupEventsList: ( ) => {
+
+		let _searchValue, _searchContainer, hasEvents = false;;
+
+		_searchContainer = app.elements.searchContainer;
+
+		_searchContainer.innerHTML = '';
+		_searchValue = app.elements.searchInput.value.toLowerCase( ).trim( );
+		
+		app.datetime.events.forEach( event => {
+
+			if ( 
+					_searchValue == '' || 
+					event.date.toString( ).indexOf( _searchValue ) > -1 || 
+					event.year.toString( ).indexOf( _searchValue ) > -1 || 
+					event.monthAlias.toLowerCase( ).indexOf( _searchValue ) > -1 || 
+					event.name.toLowerCase( ).indexOf( _searchValue ) > -1 || 
+					event.description.toLowerCase( ).indexOf( _searchValue ) > -1 || 
+					event.customers.toLowerCase( ).indexOf( _searchValue ) > -1 ) {
+				hasEvents = true;
+				app.generateSearchPopupEventElement( _searchContainer, event );
+			} 
+
+		});
+
+		if ( !hasEvents ) app.generateSearchPopupNoEvents( _searchContainer );
+
+	},
 
 	appendHandlers: ( ) => {
 
+		app.addEventButtonHandler( );
 		app.updateButtonHandler( );
 		app.addPrevButtonHandler( );
 		app.addNextButtonHandler( );
 		app.todayButtonHandler( );
+		app.searchInputHandler( );
+		app.clearSearchInputHandler( );
+
+		app.documentClickHandler( );
+		
+		app.closePopupHandler( );
 
 	},
 
@@ -157,6 +469,141 @@ const app = {
 	todayButtonHandler: ( ) => {
 		app.elements.todayButton.addEventListener( 'click', event => {
 			app.datetime._obj_selectedDate = new Date(  );
+			app.datetime.updateParameters( );
+			app.updateInterface( );
+		});
+	},
+
+	addEventButtonHandler: ( ) => {
+
+		let _button;
+
+		app.elements.addEventButton.addEventListener( 'click', event => {
+			_button = event.target;
+			
+			if ( _button.classList.contains( 'active' ) ) return;
+
+			_button.classList.add( 'active' );
+
+			app.elements.addFastInput.value = '';
+
+			app.elements.addFastEventPopup.style.top  = _button.getBoundingClientRect( ).top  + window.scrollY + _button.getBoundingClientRect( ).height + 15 + 'px';
+			app.elements.addFastEventPopup.style.left = _button.getBoundingClientRect( ).left + window.scrollX + 'px';
+			app.elements.addFastEventPopup.classList.add( 'visible' );
+		});
+	},
+
+	searchInputHandler: ( ) => {
+
+		let _input, _popupVisible = false;
+
+		[ 'focus', 'input' ].forEach( evt => {
+
+			app.elements.searchInput.addEventListener( evt, event => {
+				_input = event.target;
+				_popupVisible = app.elements.searchEventPopup.classList.contains( 'visible' );
+
+				if ( !_popupVisible ) {
+					app.elements.searchEventPopup.classList.add( 'visible' );
+
+					app.elements.searchEventPopup.style.top  = _input.getBoundingClientRect( ).top  + window.scrollY + _input.getBoundingClientRect( ).height + 15 + 'px';
+					app.elements.searchEventPopup.style.left = _input.getBoundingClientRect( ).left + window.scrollX - 11 + 'px';
+				}
+
+				app.generateSearchPopupEventsList( );
+
+			});
+
+		});
+	},
+
+	clearSearchInputHandler: ( ) => {
+
+		app.elements.clearSearchInput.addEventListener( 'click', evt => {
+			app.elements.searchInput.value = '';
+			app.hideSearchPopup( );
+		});
+	},
+
+	closePopupHandler: ( ) => {
+
+		let _closeButtons = document.getElementsByClassName( 'close-popup' );
+		let _closeButton;
+
+		for ( let i = 0; i < _closeButtons.length; ++i ) {
+			_closeButton = _closeButtons[i];
+			_closeButton.addEventListener( 'click', event => { 
+				event.target.parentNode.classList.remove( 'visible' ); 
+				app.elements.addEventButton.classList.remove( 'active' );
+			});
+		}
+	},
+
+	documentClickHandler: ( ) => {
+
+		let _clickedElement, _activeElements, i, _clickedOnDayPopup = false;
+
+		document.addEventListener( 'click', event => {
+
+			_clickedElement = event.target;
+
+			// If search popup visible
+			if ( app.elements.searchEventPopup.classList.contains( 'visible' ) ) {
+				if ( 
+						_clickedElement != app.elements.searchEventPopup && 
+						!_clickedElement.closest( '#' + app.elements.searchEventPopup.id ) && 
+						_clickedElement != app.elements.searchInput 
+					) 
+					app.hideSearchPopup( );
+			}
+
+			_clickedOnDayPopup = ( _clickedElement == app.elements.addEventPopup ) || ( !!_clickedElement.closest( '#' + app.elements.addEventPopup.id ) );
+
+			// console.log( _clickedElement, _clickedOnDayPopup, _clickedElement.closest( '#' + app.elements.addEventPopup.id ) );
+
+			// If day popup visible
+			if ( app.elements.addEventPopup.classList.contains( 'visible' ) ) {
+				if ( 
+						!_clickedElement.classList.contains( 'calendar__day' ) && 
+						!_clickedElement.parentNode.classList.contains( 'calendar__day' ) && 
+						!_clickedOnDayPopup &&
+						!_clickedElement.classList.contains( 'event__edit-button' )
+					) 
+					app.hideAddEventPopup( );
+			}
+
+
+			_activeElements = document.getElementsByClassName( 'calendar__day--selected' );
+			if ( _activeElements.length ) {
+				for ( i = 0; i < _activeElements.length; ++i ) {
+					if ( 
+						(!_clickedOnDayPopup || _clickedElement.classList.contains( 'close-popup' ) ) &&
+						_activeElements[i] != _clickedElement &&
+						!_clickedElement.classList.contains( 'event__edit-button' ) &&
+						_activeElements[i] != _clickedElement.parentNode ) 
+						_activeElements[i].classList.remove( 'calendar__day--selected' );
+				}
+			}
+
+		});
+	},
+
+	hideSearchPopup: ( ) => {
+		app.elements.searchEventPopup.classList.remove( 'visible' );
+	},
+
+	hideAddEventPopup: ( ) => {
+		app.elements.addEventPopup.classList.remove( 'visible' );
+	},
+
+	searchElementHandler: ( element ) => {
+
+		let _eventDate;
+
+		element.addEventListener( 'click', event => {
+			_eventDate = element.getAttribute( 'data-date' ).split( '-' );
+			app.datetime._obj_selectedDate = new Date( _eventDate[2], _eventDate[1], _eventDate[0] );
+			app.hideSearchPopup( );
 			app.datetime.updateParameters( );
 			app.updateInterface( );
 		});

@@ -51,8 +51,10 @@
 	<div class="popup" id="add-fast-popup">
 		<span class="close-popup icon icon-close"></span>
 		<div>
-			<input type="text" class="default-input full-width" placeholder="22 мая, полить цветы" />
-			<button class="default-button" type="button" id="add-fast-button">Создать</button>
+			<form id="add-fast-form">
+				<input type="text" class="default-input full-width" id="add-fast-input" placeholder="22 мая, полить цветы" />
+				<button class="default-button add-fast-button" type="submit">Создать</button>
+			</form>
 			
 		</div>
 	</div>
@@ -60,11 +62,16 @@
 
 	<div class="popup" id="add-event-popup">
 		<span class="close-popup icon icon-close"></span>
+		<div class="event__container" id="event-container">
+			
+		</div>
 	</div>
 
 
-	<div class="popup" id="search-event-popup">
-		<span class="close-popup icon icon-close"></span>
+	<div class="popup search-event-popup" id="search-event-popup">
+		<div class="search-popup__container" id="search-container">
+			
+		</div>
 	</div>
 
 </body>

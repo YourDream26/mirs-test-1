@@ -1,4 +1,5 @@
 const datetime = {
+
 	daysOfWeek: [
 		'Понедельник',
 		'Вторник',
@@ -8,20 +9,22 @@ const datetime = {
 		'Суббота',
 		'Воскресенье'
 	],
+
 	monthsAliases: [
-		'Январь',
-		'Февраль',
-		'Март',
-		'Апрель',
-		'Май',
-		'Июнь',
-		'Июль',
-		'Август',
-		'Сентябрь',
-		'Октябрь',
-		'Ноябрь',
-		'Декабрь'
+		[ 'Январь',   'Января'	 ],
+		[ 'Февраль',  'Февраля'	 ],
+		[ 'Март',     'Марта'		 ],
+		[ 'Апрель',   'Апреля'	 ],
+		[ 'Май',			'Мая' 		 ],
+		[ 'Июнь',		  'Июня'		 ],
+		[ 'Июль',		  'Июля'		 ],
+		[ 'Август',	  'Августа'  ],
+		[ 'Сентябрь', 'Сентября' ],
+		[ 'Октябрь',  'Октября'  ],
+		[ 'Ноябрь',	  'Ноября'	 ],
+		[ 'Декабрь',	'Декабря'	 ]
 	],
+
 	_obj_selectedDate: new Date( ),
 	_obj_prevDate: new Date( ),
 	_obj_nextDate: new Date( ),
@@ -58,6 +61,7 @@ const datetime = {
 		{
 			date: 9,
 			month: 4,
+			monthAlias: 'Мая',
 			year: 2018,
 			name: 'День Победы!',
 			description: 'Надо отпраздновать!',
@@ -65,7 +69,8 @@ const datetime = {
 		},
 		{
 			date: 22,
-			month: 4,
+			month: 5,
+			monthAlias: 'Июня',
 			year: 2018,
 			name: 'День Рождения',
 			description: 'ДР у Георгия Константиновича',
@@ -103,7 +108,7 @@ const datetime = {
 	getDateDefaultParameters: ( paramObject, dateObject ) => {
 		paramObject.year 				= dateObject.getFullYear( );
 		paramObject.month 			= dateObject.getMonth( );
-		paramObject.monthAlias 	= datetime.monthsAliases[paramObject.month];
+		paramObject.monthAlias 	= datetime.monthsAliases[paramObject.month][0];
 		paramObject.date 				= dateObject.getDate( );
 	},
 
