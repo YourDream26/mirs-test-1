@@ -28,6 +28,7 @@ const app = {
 		searchInput: 						document.getElementById( 'search-input' ),
 		clearSearchInput: 			document.getElementById( 'clear-header-input' ),
 		addFastEventPopup:			document.getElementById( 'add-fast-popup' ),
+		addFastEventError:			document.getElementById( 'add-fast-event-error' ),
 		addEventPopup:					document.getElementById( 'add-event-popup' ),
 		addEventPopupContainer:	document.getElementById( 'event-container' ),
 		searchEventPopup:				document.getElementById( 'search-event-popup' ),
@@ -53,12 +54,12 @@ const app = {
 		_weekElem.classList.add( 'calendar__week-row' );
 		app.elements.calendarContainer.append( _weekElem );
 
-		week.forEach( day => { app.generateDay( _weekElem, day, index ) });
+		week.forEach( ( day, dayNumber) => { app.generateDay( _weekElem, day, index, dayNumber ) });
 
 	},
 
 
-	generateDay: ( weekElem, day, index ) => {
+	generateDay: ( weekElem, day, index, dayNumber ) => {
 
 		let _dayElem = document.createElement( 'a' ),
 				_label = document.createElement( 'span' ),
@@ -68,7 +69,10 @@ const app = {
 
 
 		_dayElem.classList.add( 'calendar__day' );
-		
+
+		if ( dayNumber > 3 )
+			_dayElem.classList.add( 'calendar__day--second-half' );
+
 		if ( app.isCurrentDay( day ) ) 
 			_dayElem.classList.add( 'calendar__day--current' );
 
@@ -131,8 +135,13 @@ const app = {
 			app.fillAddPopup( date, _container, {} );
 		}
 
-		app.elements.addEventPopup.style.top  = element.getBoundingClientRect( ).top  + window.scrollY + 'px';
-		app.elements.addEventPopup.style.left = element.getBoundingClientRect( ).left + window.scrollX + element.getBoundingClientRect( ).width + 14 + 'px';
+		if ( element.classList.contains( 'calendar__day--second-half' ) ) {
+			app.elements.addEventPopup.style.top  = element.getBoundingClientRect( ).top  + window.scrollY + 'px';
+			app.elements.addEventPopup.style.left = element.getBoundingClientRect( ).left + window.scrollX - app.elements.addEventPopup.getBoundingClientRect( ).width - 14 + 'px';
+		} else {
+			app.elements.addEventPopup.style.top  = element.getBoundingClientRect( ).top  + window.scrollY + 'px';
+			app.elements.addEventPopup.style.left = element.getBoundingClientRect( ).left + window.scrollX + element.getBoundingClientRect( ).width + 14 + 'px';
+		}
 
 		app.elements.addEventPopup.classList.add( 'visible' );
 
@@ -287,7 +296,7 @@ const app = {
 		button.addEventListener( 'click', evt => {
 			app.datetime.events.forEach( ( _evt, index ) => {
 				if ( _evt.date == date.date && _evt.month == date.month && _evt.year == date.year ) {
-					app.datetime.events.splice( 1, index );
+					app.datetime.events.splice( index, 1 );
 				}
 			});
 			app.hideAddEventPopup( );
@@ -433,6 +442,7 @@ const app = {
 		app.todayButtonHandler( );
 		app.searchInputHandler( );
 		app.clearSearchInputHandler( );
+		app.submitFastEventForm( );
 
 		app.documentClickHandler( );
 		
@@ -588,8 +598,110 @@ const app = {
 		});
 	},
 
+	submitFastEventForm: ( ) => {
+
+		let _value = '', _data, _event, _month, _lastDayOfMonth, _eventExist = false;
+
+		app.elements.addFastForm.addEventListener( 'submit', evt => {
+
+			evt.preventDefault( );
+
+			_event = {
+				date: 1,
+				month: 0,
+				monthAlias: '',
+				year: app.datetime.selectedDate.year,
+				name: '',
+				description: '',
+				customers: ''
+			};
+
+			_month = '';
+			_lastDayOfMonth = 0;
+			_eventExist = false;
+
+			app.elements.addFastEventError.innerHTML = '';
+			_value = app.elements.addFastInput.value.trim( ).toLowerCase( );
+
+			if ( /^[0-9]{1,2}\s+[а-яё]+\s*\,\s*([ёа-я0-9a-z\,\.\-\—\(\)\+]+\s*)+$/.test( _value ) == false ) {
+				app.elements.addFastEventError.innerHTML = 'Ошибка данных! Введите данные в правильном формате:<br /> <День> <Месяц>, <Событие>';
+				return false;
+			} 
+
+			_data = _value.split( ',' );
+
+			// Date
+			_data[0] = _data[0].trim( );
+			// Event name
+			_data[1] = _data[1].trim( );
+
+			_event.name = _data[1];
+
+
+			_data[0] = _data[0].split( ' ' );
+
+			// Date date
+			_data[0][0] = +_data[0][0].trim( );
+
+			if ( _data[0][0] == 0 ) {
+				app.elements.addFastEventError.innerHTML = 'Ошибка данных! День не может принимать значение "0"';
+				return false;
+			}
+
+			// Date month
+			_data[0][1] = _data[0][1].trim( );
+
+			// Searching month
+			app.datetime.monthsAliases.forEach( ( month, index ) => {
+				if ( month[0].toLowerCase( ) == _data[0][1] ||  month[1].toLowerCase( ) == _data[0][1] ) {
+					_month = month[1];
+					_event.month = index;
+					_event.monthAlias = month[1];
+				}
+			});
+
+			if ( _month == '' ) {
+				app.elements.addFastEventError.innerHTML = 'Ошибка данных! Введённый месяц не найден';
+				return false;
+			}
+
+			_lastDayOfMonth = new Date( _event.year, ( _event.month + 1 ), 0 ).getDate( );
+
+			if ( _data[0][0] > _lastDayOfMonth ) {
+				app.elements.addFastEventError.innerHTML = 'Ошибка данных! В выбранном месяце всего ' + _lastDayOfMonth + ' дней';
+				return false;
+			}
+
+			_event.date = _data[0][0];
+
+			app.datetime.events.forEach( _evt => {
+				if ( _evt.date == _event.date && _evt.month == _event.month && _evt.year == _event.year ) _eventExist = true;
+			});
+
+			if ( _eventExist ) {
+				app.elements.addFastEventError.innerHTML = 'Ошибка данных! Выбранная дата уже содержит событие';
+				return false;
+			}
+
+			app.datetime.events.push( _event );
+			app.hideAddFastEventPopup( );
+			app.datetime.updateParameters( );
+			app.updateInterface( );
+
+ 
+
+			return false;
+		});
+
+	},
+
 	hideSearchPopup: ( ) => {
 		app.elements.searchEventPopup.classList.remove( 'visible' );
+	},
+
+	hideAddFastEventPopup: ( ) => {
+		app.elements.addEventButton.classList.remove( 'active' );
+		app.elements.addFastEventPopup.classList.remove( 'visible' );
 	},
 
 	hideAddEventPopup: ( ) => {

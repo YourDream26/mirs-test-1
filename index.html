@@ -48,11 +48,12 @@
 	</section>
 
 
-	<div class="popup" id="add-fast-popup">
+	<div class="popup add-fast-popup" id="add-fast-popup">
 		<span class="close-popup icon icon-close"></span>
 		<div>
 			<form id="add-fast-form">
-				<input type="text" class="default-input full-width" id="add-fast-input" placeholder="22 мая, полить цветы" />
+				<input type="text" class="default-input full-width" id="add-fast-input" required placeholder="22 мая, полить цветы" />
+				<p class="fast__error" id="add-fast-event-error"></p>
 				<button class="default-button add-fast-button" type="submit">Создать</button>
 			</form>
 			

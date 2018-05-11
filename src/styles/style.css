@@ -448,6 +448,24 @@ input:placeholder-shown+.header__clear-input {
 }
 
 
+.add-fast-popup {
+	width: 300px;
+}
+
+.fast__error {
+  margin-top: 5px;
+  font-size: .725em;
+  color: #d11;
+  padding: 2px;
+}
+
+.fast__error:empty {
+  margin: 0;
+  padding: 0;
+  display: none;
+}
+
+
 
 
 
